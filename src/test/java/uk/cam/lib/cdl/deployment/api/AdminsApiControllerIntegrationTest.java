@@ -18,12 +18,12 @@ public class AdminsApiControllerIntegrationTest {
     @Autowired
     private AdminsApi api;
 
-    @Test
+/*    @Test
     public void instancesInstanceidDeleteTest() throws Exception {
         String instanceid = "instanceid_example";
         ResponseEntity<Void> responseEntity = api.instancesInstanceidDelete(instanceid);
         assertEquals(HttpStatus.NOT_IMPLEMENTED, responseEntity.getStatusCode());
-    }
+    }*/
 
     @Test
     public void instancesInstanceidPostTest() throws Exception {

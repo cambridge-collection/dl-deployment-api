@@ -23,7 +23,7 @@ public class DatabaseDao {
     public List<Instance> getInstances() {
         String query = "SELECT * FROM currentversions";
         List<Instance> instances = jdbcTemplate.query(
-            query, new Object[] {}, new InstanceRowMapper());
+            query, new Object[]{}, new InstanceRowMapper());
         return instances;
     }
 
@@ -41,10 +41,11 @@ public class DatabaseDao {
         Instance instance = jdbcTemplate.queryForObject(
             query, new Object[]{newInstance.getInstanceId()}, new InstanceRowMapper());
 
-        if (instance!=null) {
-            jdbcTemplate.update("UPDATE currentversions SET version=? , url=? WHERE " +
+        if (instance != null) {
+            jdbcTemplate.update("UPDATE currentversions SET version=? , url=?, displayorder=? WHERE " +
                     "instanceid=? ",
-                newInstance.getVersion(), newInstance.getUrl(), newInstance.getInstanceId());
+                newInstance.getVersion(), newInstance.getUrl(), newInstance.getDisplayOrder(),
+                newInstance.getInstanceId());
         }
 
     }
@@ -54,6 +55,7 @@ public class DatabaseDao {
         public Instance mapRow(ResultSet rs, int rowNum) throws SQLException {
             Instance instance = new Instance();
 
+            instance.setDisplayOrder(rs.getInt("displayorder"));
             instance.setInstanceId(rs.getString("instanceid"));
             instance.setVersion(rs.getString("version"));
             instance.setUrl(rs.getString("url"));
