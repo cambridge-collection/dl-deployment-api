@@ -18,7 +18,8 @@ public class BasicWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdap
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.authorizeRequests()
+        http.csrf().disable()
+            .authorizeRequests()
             .antMatchers("/api/**").access("hasIpAddress('127.0.0.1') " +
             "or hasIpAddress('::1') " +
             "or hasIpAddress('" + allowedIPAddress + "')")
