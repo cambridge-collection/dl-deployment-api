@@ -12,13 +12,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import uk.cam.lib.cdl.deployment.api.dao.DatabaseDao;
+import uk.cam.lib.cdl.deployment.api.dao.StatusAPI;
 import uk.cam.lib.cdl.deployment.api.exceptions.BadRequestException;
 import uk.cam.lib.cdl.deployment.api.exceptions.NotFoundException;
 import uk.cam.lib.cdl.deployment.api.model.Instance;
 import uk.cam.lib.cdl.deployment.api.model.Status;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
 import java.util.List;
 
 @Controller
@@ -29,16 +29,20 @@ public class UsersApiController implements UsersApi {
     private final ObjectMapper objectMapper;
     private final HttpServletRequest request;
     private final DatabaseDao databaseDAO;
+    private final StatusAPI statusAPI;
 
     @Autowired
-    public UsersApiController(ObjectMapper objectMapper, HttpServletRequest request, DatabaseDao databaseDAO) {
+    public UsersApiController(ObjectMapper objectMapper, HttpServletRequest request, DatabaseDao databaseDAO,
+                              StatusAPI statusAPI) {
         this.objectMapper = objectMapper;
         this.request = request;
         this.databaseDAO = databaseDAO;
+        this.statusAPI = statusAPI;
     }
 
     /**
      * Get a full list of deployed server instances.
+     *
      * @return
      * @throws BadRequestException
      */
@@ -46,6 +50,9 @@ public class UsersApiController implements UsersApi {
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
             List<Instance> instances = databaseDAO.getInstances();
+            if (instances == null) {
+                return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            }
             return new ResponseEntity<>(instances, HttpStatus.OK);
         }
 
@@ -54,6 +61,7 @@ public class UsersApiController implements UsersApi {
 
     /**
      * Gets the instanceid and version for a specific server instance
+     *
      * @param instanceid
      * @return
      * @throws NotFoundException
@@ -67,6 +75,9 @@ public class UsersApiController implements UsersApi {
             try {
 
                 Instance instance = databaseDAO.getInstanceFromId(instanceid);
+                if (instance == null) {
+                    return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+                }
                 return new ResponseEntity<>(instance, HttpStatus.OK);
 
             } catch (EmptyResultDataAccessException e) {
@@ -77,22 +88,22 @@ public class UsersApiController implements UsersApi {
     }
 
     public ResponseEntity<Status> instancesInstanceidStatusGet(@ApiParam(value = "Name of the dl server instance",
-        required = true) @PathVariable("instanceid") String instanceid) {
+        required = true) @PathVariable("instanceid") String instanceid) throws BadRequestException {
 
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
-            try {
 
-                // TODO Implement this.
-                return new ResponseEntity<Status>(objectMapper.readValue("{\n  \"currentItemsVersion\" : \"dl-version-123\",\n  \"instanceId\" : \"dev\",\n  \"currentCollectionsVersion\" : \"dl-version-123\"\n}", Status.class), HttpStatus.NOT_IMPLEMENTED);
-
-            } catch (IOException e) {
-                log.error("Couldn't serialize response for content type application/json", e);
-                return new ResponseEntity<Status>(HttpStatus.INTERNAL_SERVER_ERROR);
+            Instance instance = databaseDAO.getInstanceFromId(instanceid);
+            Status status = statusAPI.getStatus(instance);
+            if (status == null) {
+                return new ResponseEntity<>(status, HttpStatus.INTERNAL_SERVER_ERROR);
             }
-        }
 
-        return new ResponseEntity<Status>(HttpStatus.NOT_IMPLEMENTED);
+            return new ResponseEntity<>(status, HttpStatus.OK);
+
+        }
+        throw new BadRequestException(new Exception());
+
     }
 
 }

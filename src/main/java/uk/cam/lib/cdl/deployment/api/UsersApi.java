@@ -17,7 +17,7 @@ public interface UsersApi extends ParentApi {
     @ApiOperation(value = "Returns details for all dl instances", nickname = "instancesGet",
         notes = "Returns details for all the dl instances. ", response = Instance.class, responseContainer = "List",
         authorizations = {
-        @Authorization(value = "ApiKeyAuth")}, tags = {"users",})
+            @Authorization(value = "ApiKeyAuth")}, tags = {"users",})
     @ApiResponses(value = {
         @ApiResponse(code = 200, message = "Details for all dl instances", response = Instance.class,
             responseContainer = "List"),
@@ -57,6 +57,6 @@ public interface UsersApi extends ParentApi {
         produces = {"application/json"},
         method = RequestMethod.GET)
     ResponseEntity<Status> instancesInstanceidStatusGet(@ApiParam(value = "Name of the dl server instance",
-        required = true) @PathVariable("instanceid") String instanceid);
+        required = true) @PathVariable("instanceid") String instanceid) throws BadRequestException;
 
 }

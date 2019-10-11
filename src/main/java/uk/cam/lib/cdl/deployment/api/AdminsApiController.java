@@ -3,19 +3,21 @@ package uk.cam.lib.cdl.deployment.api;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiParam;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.EmptyResultDataAccessException;
-import uk.cam.lib.cdl.deployment.api.dao.DatabaseDao;
-import uk.cam.lib.cdl.deployment.api.exceptions.BadRequestException;
-import uk.cam.lib.cdl.deployment.api.exceptions.NotFoundException;
-import uk.cam.lib.cdl.deployment.api.model.Instance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import uk.cam.lib.cdl.deployment.api.dao.DatabaseDao;
+import uk.cam.lib.cdl.deployment.api.exceptions.BadRequestException;
+import uk.cam.lib.cdl.deployment.api.exceptions.NotFoundException;
+import uk.cam.lib.cdl.deployment.api.model.Instance;
+import uk.cam.lib.cdl.deployment.api.puppet.RemotePuppetAgent;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
@@ -29,12 +31,18 @@ public class AdminsApiController implements AdminsApi {
     private final ObjectMapper objectMapper;
     private final HttpServletRequest request;
     private final DatabaseDao databaseDAO;
+    private final RemotePuppetAgent puppetAgent;
+
+    @Value("${deployment.api.puppet.remote-trigger.enable}")
+    private boolean enableTriggerPuppet;
 
     @Autowired
-    public AdminsApiController(ObjectMapper objectMapper, HttpServletRequest request, DatabaseDao databaseDAO) {
+    public AdminsApiController(ObjectMapper objectMapper, HttpServletRequest request, DatabaseDao databaseDAO,
+                               RemotePuppetAgent puppetAgent) {
         this.objectMapper = objectMapper;
         this.request = request;
         this.databaseDAO = databaseDAO;
+        this.puppetAgent = puppetAgent;
     }
 
     // TODO Implement add and delete?
@@ -53,17 +61,24 @@ public class AdminsApiController implements AdminsApi {
      * @return
      * @throws BadRequestException
      */
-    public ResponseEntity<Void> instancesInstanceidPost(@ApiParam(value = "" ,required=true )
+    public ResponseEntity<Void> instancesInstanceidPost(@ApiParam(value = "", required = true)
                                                         @Valid @RequestBody Instance body,
                                                         @ApiParam(value = "Name of the dl server instance",
-                                                            required=true) @PathVariable("instanceid")
+                                                            required = true) @PathVariable("instanceid")
                                                             String instanceid) throws BadRequestException,
-                                                        NotFoundException {
+        NotFoundException {
 
-        if (body.getInstanceId()!=null && body.getInstanceId().equals(instanceid)) {
+        if (body.getInstanceId() != null && body.getInstanceId().equals(instanceid)) {
 
             try {
                 databaseDAO.updateInstance(body);
+                if (enableTriggerPuppet) {
+                    boolean triggeredOK = puppetAgent.triggerAgent(body, false);
+                    if (!triggeredOK) {
+                        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+                    }
+                }
+
                 return new ResponseEntity<>(HttpStatus.OK);
             } catch (EmptyResultDataAccessException ex) {
                 throw new NotFoundException(new Exception());
