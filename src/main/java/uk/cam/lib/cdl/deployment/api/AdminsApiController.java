@@ -75,6 +75,7 @@ public class AdminsApiController implements AdminsApi {
                 if (enableTriggerPuppet) {
                     boolean triggeredOK = puppetAgent.triggerAgent(body, false);
                     if (!triggeredOK) {
+                        System.err.println("There was an error triggering the puppet run on " + instanceid);
                         return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
                     }
                 }

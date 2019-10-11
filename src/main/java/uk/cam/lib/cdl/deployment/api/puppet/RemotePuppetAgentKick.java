@@ -9,7 +9,7 @@ public class RemotePuppetAgentKick implements RemotePuppetAgent {
     @Override
     public boolean triggerAgent(Instance instance, boolean waitForReturn) {
 
-        String command = "sudo puppet kick " + instance.getUrl();
+        String command = "sudo puppet kick " + instance.getInstanceId();
 
         if (waitForReturn) {
             command += " --forground ";
@@ -18,8 +18,9 @@ public class RemotePuppetAgentKick implements RemotePuppetAgent {
         try {
             Process p = Runtime.getRuntime().exec(command);
             p.waitFor();
+            int value = p.exitValue();
             p.destroy();
-            return (p.exitValue() == 0);
+            return (value == 0);
 
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();

@@ -96,7 +96,7 @@ public class UsersApiController implements UsersApi {
             Instance instance = databaseDAO.getInstanceFromId(instanceid);
             Status status = statusAPI.getStatus(instance);
             if (status == null) {
-                return new ResponseEntity<>(status, HttpStatus.INTERNAL_SERVER_ERROR);
+                return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
             }
 
             return new ResponseEntity<>(status, HttpStatus.OK);
