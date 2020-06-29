@@ -20,10 +20,7 @@ public class BasicWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdap
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable()
             .authorizeRequests()
-            .antMatchers("/api/**").access("hasIpAddress('127.0.0.1') " +
-            "or hasIpAddress('::1') " +
-            "or hasIpAddress('" + allowedIPAddress + "')")
-            .antMatchers("/index.html", "/", "/swagger-ui.html").permitAll();
+            .antMatchers("/api/**").permitAll();
 
     }
 
