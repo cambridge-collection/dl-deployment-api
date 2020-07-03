@@ -1,0 +1,40 @@
+version: "3.7"
+
+services:
+
+  dl-deployment-api:
+    image: openjdk:11.0.7
+    volumes:
+      - ${DL_DEPLOYMENT_API_WAR:-./target/api-0.1.0-SNAPSHOT.war}:/usr/local/dl-deployment-api.war
+    command: java -jar -debug /usr/local/dl-deployment-api.war
+    depends_on:
+      - dl-deployment-db
+    ports:
+      - 8090:8090
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 2
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+
+  dl-deployment-db:
+    build:
+       context: docker/dl-deployment-db
+       dockerfile: Dockerfile
+    restart: always
+    environment:
+        POSTGRES_USER: dl-deployment-db
+        POSTGRES_DB: dl-deployment-db
+        POSTGRES_PASSWORD: ${TEST_DB_PASSWORD:-password}
+    ports:
+        - ${DEPLOY_DB_HOST_PORT:-0}:5432
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 2
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+
