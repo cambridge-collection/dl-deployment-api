@@ -11,7 +11,7 @@ services:
     depends_on:
       - dl-deployment-db
     ports:
-      - 8090:8090
+      - ${DEPLOY_API_PORT_EXT}:${DEPLOY_API_PORT_INT}
 
   dl-deployment-db:
     build:
@@ -20,9 +20,9 @@ services:
     restart: always
     image: cudl/dl-deployment-db:latest
     environment:
-      POSTGRES_USER: dl-deployment-db
-      POSTGRES_DB: dl-deployment-db
-      POSTGRES_PASSWORD: ${TEST_DB_PASSWORD:-password}
+      POSTGRES_USER: ${DEPLOY_DB_USER}
+      POSTGRES_DB: ${DEPLOY_DB_DATABASE}
+      POSTGRES_PASSWORD: ${DEPLOY_DB_PASSWORD:-password}
     ports:
-        - ${DEPLOY_DB_HOST_PORT:-0}:5432
+        - ${DEPLOY_DB_PORT_EXT:-0}:${DEPLOY_DB_PORT_INT}
 
