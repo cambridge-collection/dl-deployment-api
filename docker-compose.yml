@@ -22,7 +22,7 @@ services:
     environment:
       POSTGRES_USER: ${DEPLOY_DB_USER}
       POSTGRES_DB: ${DEPLOY_DB_DATABASE}
-      POSTGRES_PASSWORD: ${DEPLOY_DB_PASSWORD:-password}
+      POSTGRES_PASSWORD: ${DEPLOY_DB_PASSWORD}
     ports:
         - ${DEPLOY_DB_PORT_EXT:-0}:${DEPLOY_DB_PORT_INT}
 
